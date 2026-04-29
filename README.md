@@ -1,5 +1,7 @@
 # docker/setup-docker-action
 
+GitHub Action to set up (download and install) Docker CE
+
 Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/docker/setup-docker-action](https://github.com/docker/setup-docker-action).
 
 ## Versions
