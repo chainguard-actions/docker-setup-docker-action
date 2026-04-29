@@ -1,6 +1,12 @@
 # docker/setup-docker-action
 
-Hardened GitHub Action by [Chainguard](https://www.chainguard.dev).
+Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/docker/setup-docker-action](https://github.com/docker/setup-docker-action).
+
+## Versions
+
+| Version | Tag | Upstream commit |
+|---------|-----|-----------------|
+| v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/setup-docker-action/tree/v5.0.0) | — |
 
 ## Privacy
 
