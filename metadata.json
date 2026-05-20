@@ -1,7 +1,0 @@
-{
-  "owner": "docker",
-  "name": "setup-docker-action",
-  "visibility": "internal",
-  "description": "GitHub Action to set up (download and install) Docker CE",
-  "block_publish": false
-}
