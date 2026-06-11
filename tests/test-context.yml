@@ -1,0 +1,23 @@
+name: Test context input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: latest
+          context: my-docker-context
+      - name: Assert sock output is set
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: expected sock output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
