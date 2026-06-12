@@ -1,4 +1,4 @@
-name: Test daemon-config input
+name: Test Docker setup with daemon config
 on:
   workflow_dispatch:
 jobs:
@@ -9,9 +9,13 @@ jobs:
       - id: action
         uses: .
         with:
-          version: latest
-          daemon-config: '{"log-level": "warn"}'
-      - name: Assert sock output is set
+          version: 'latest'
+          daemon-config: |
+            {
+              "log-level": "warn",
+              "log-driver": "json-file"
+            }
+      - name: Assert docker socket output is set
         env:
           SOCK: ${{ steps.action.outputs.sock }}
         run: |
@@ -21,3 +25,7 @@ jobs:
             exit 1
           fi
           echo "PASS"
+      - name: Assert docker is running with config
+        run: |
+          docker info
+          echo "PASS: docker daemon is running"

@@ -1,0 +1,38 @@
+name: Test Docker setup with tcp-port and runtime-basedir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: 'latest'
+          tcp-port: '2375'
+          runtime-basedir: '/tmp/docker-runtime'
+      - name: Assert docker socket output is set
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: expected sock output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert docker TCP output is set
+        env:
+          TCP: ${{ steps.action.outputs.tcp }}
+        run: |
+          echo "tcp: $TCP"
+          if [ -z "$TCP" ]; then
+            echo "FAIL: expected tcp output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert docker is reachable via TCP
+        run: |
+          docker -H tcp://localhost:2375 version
+          echo "PASS: docker is reachable via TCP"

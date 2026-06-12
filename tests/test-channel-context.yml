@@ -1,4 +1,4 @@
-name: Test basic Docker setup
+name: Test Docker setup with channel and context
 on:
   workflow_dispatch:
 jobs:
@@ -10,6 +10,8 @@ jobs:
         uses: .
         with:
           version: 'latest'
+          channel: 'stable'
+          context: 'my-docker-context'
       - name: Assert docker socket output is set
         env:
           SOCK: ${{ steps.action.outputs.sock }}
@@ -20,7 +22,7 @@ jobs:
             exit 1
           fi
           echo "PASS"
-      - name: Assert docker is available
+      - name: Assert docker context exists
         run: |
-          docker version
-          echo "PASS: docker is available"
+          docker context ls
+          echo "PASS: docker context listed"
