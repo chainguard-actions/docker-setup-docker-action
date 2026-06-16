@@ -1,0 +1,30 @@
+name: Test Docker setup with context input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-docker
+        uses: .
+        with:
+          context: my-test-context
+      - name: Assert Docker socket output is set
+        env:
+          SOCK: ${{ steps.setup-docker.outputs.sock }}
+        run: |
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: expected sock output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert Docker context exists
+        run: |
+          docker context ls
+          if ! docker context ls | grep -q "my-test-context"; then
+            echo "FAIL: expected context 'my-test-context' to exist"
+            exit 1
+          fi
+          echo "PASS: context 'my-test-context' found"
