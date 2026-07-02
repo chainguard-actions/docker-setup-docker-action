@@ -1,0 +1,28 @@
+name: Test runtime-basedir input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create runtime base directory
+        run: mkdir -p /tmp/docker-runtime
+      - id: action
+        uses: .
+        with:
+          runtime-basedir: /tmp/docker-runtime
+      - name: Assert sock output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "actual sock: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected sock output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert Docker is available
+        run: |
+          docker version
+          echo "PASS: docker is available"

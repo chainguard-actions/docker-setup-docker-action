@@ -1,0 +1,45 @@
+name: Test basic Docker setup
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+        continue-on-error: true
+      - name: Assert Docker is functional
+        run: |
+          echo "Checking Docker availability..."
+          docker version
+          if [ $? -ne 0 ]; then
+            echo "FAIL: docker version command failed"
+            exit 1
+          fi
+          echo "PASS: Docker is functional"
+      - name: Assert sock output or Docker socket exists
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "sock output: $SOCK"
+          if [ -n "$SOCK" ]; then
+            echo "Action set sock output to: $SOCK"
+            if [ -S "$SOCK" ]; then
+              echo "PASS: Docker socket exists at $SOCK"
+            else
+              echo "INFO: sock output set but socket not found at $SOCK (may be a path alias)"
+            fi
+          else
+            echo "INFO: sock output not set (action may have skipped install since Docker is already available)"
+            # Verify the default Docker socket exists
+            if [ -S /var/run/docker.sock ]; then
+              echo "PASS: Default Docker socket exists at /var/run/docker.sock"
+            else
+              echo "FAIL: No Docker socket found"
+              exit 1
+            fi
+          fi

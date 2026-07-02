@@ -1,0 +1,32 @@
+name: Test tcp-port input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          tcp-port: '2375'
+      - name: Assert sock output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "actual sock: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected sock output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert tcp output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.tcp }}
+        run: |
+          echo "actual tcp: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected tcp output to be non-empty when tcp-port is set"
+            exit 1
+          fi
+          echo "PASS"
