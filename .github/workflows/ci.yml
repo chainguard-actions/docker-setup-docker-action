@@ -1,0 +1,347 @@
+name: ci
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * *'
+  push:
+    branches:
+      - 'master'
+      - 'releases/v*'
+    tags:
+      - 'v*'
+  pull_request:
+
+env:
+  DOCKER_VERSION: v27.3.1
+  DOCKER_BUILD_SUMMARY: false
+
+jobs:
+  main:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-26-large
+          - windows-latest
+        version:
+          - ""
+          - v27.3.1
+          - type=image,tag=27.3.1
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+
+  channel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-26-large
+          - windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          channel: test
+
+  daemon-config:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-26-large
+          - windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+
+  context:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-26-large
+          - windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          context: foo
+      -
+        name: Check context
+        run: |
+          docker context inspect foo
+
+  lima-start-args:
+    runs-on: macos-26-large
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+        env:
+          LIMA_START_ARGS: --cpus 4 --memory 8
+
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        containerd:
+          - containerd-system
+          - containerd-tarball
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Uninstall containerd
+        if: matrix.containerd == 'containerd-tarball'
+        run: |
+          sudo apt-get remove -y containerd.io
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+      -
+        name: Start registry
+        run: |
+          docker run -d -p 5000:5000 --restart=always --name registry registry:2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        with:
+          driver: docker
+          driver-opts: network=host
+      -
+        name: Build and push
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: ./test
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+
+  build-macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-26-large
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+      -
+        name: Start registry
+        run: |
+          docker run -d -p 5000:5000 --restart=always --name registry registry:2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        with:
+          driver: docker
+          driver-opts: network=host
+      -
+        name: Build and push
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: ./test
+          push: true
+          tags: |
+            localhost:5000/name/app:latest
+      -
+        name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/name/app:latest --format '{{json .}}'
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+      -
+        name: Build
+        working-directory: ./test
+        run: |
+          docker build -f win.Dockerfile -t test .
+      -
+        name: Inspect
+        run: |
+          docker image inspect test
+
+  set-host:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          set-host: true
+      -
+        name: List contexts
+        run: |
+          docker context ls
+
+  rootless:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          rootless: true
+      -
+        name: List contexts
+        run: |
+          docker context ls
+
+  tcp:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-26-large
+          - windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        id: setup_docker
+        uses: ./
+        with:
+          version: ${{ env.DOCKER_VERSION }}
+          tcp-port: 2378
+      -
+        name: Check docker info through TCP
+        run: |
+          docker info
+        env:
+          DOCKER_HOST: ${{ steps.setup_docker.outputs.tcp }}
+
+  undock-regctl-version:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        undock_version:
+          - ''
+          - v0.9.0
+        regctl_version:
+          - ''
+          - v0.8.2
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: type=image
+        env:
+          UNDOCK_VERSION: ${{ matrix.undock_version }}
+          REGCTL_VERSION: ${{ matrix.regctl_version }}
+
+  docker-29:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-26-large
+          - windows-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Set up Docker
+        uses: ./
+        with:
+          version: v29.0.0-rc.1
+          channel: test
