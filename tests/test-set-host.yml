@@ -1,4 +1,4 @@
-name: Test Docker setup with TCP port
+name: Test Docker setup with set-host
 on:
   workflow_dispatch:
 jobs:
@@ -10,7 +10,7 @@ jobs:
         uses: .
         with:
           version: latest
-          tcp-port: '2375'
+          set-host: 'true'
         continue-on-error: true
       - name: Assert action ran (sock output set, or failed gracefully in act environment)
         env:
@@ -31,34 +31,27 @@ jobs:
             echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1
           fi
-      - name: Assert tcp output is set (if action succeeded)
+      - name: Assert DOCKER_HOST is set (if action succeeded)
         env:
-          TCP: ${{ steps.action.outputs.tcp }}
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           if [ "$OUTCOME" = "success" ]; then
-            echo "tcp: $TCP"
-            if [ -z "$TCP" ]; then
-              echo "FAIL: expected tcp output to be set when tcp-port is specified"
+            echo "DOCKER_HOST: $DOCKER_HOST"
+            if [ -z "$DOCKER_HOST" ]; then
+              echo "FAIL: expected DOCKER_HOST to be set when set-host=true"
               exit 1
             fi
-            if ! echo "$TCP" | grep -q "2375"; then
-              echo "FAIL: expected tcp output to contain port 2375, got: $TCP"
-              exit 1
-            fi
-            echo "PASS: tcp=$TCP"
+            echo "PASS: DOCKER_HOST=$DOCKER_HOST"
           else
-            echo "SKIP: action did not succeed, skipping tcp output check"
+            echo "SKIP: action did not succeed, skipping DOCKER_HOST check"
           fi
-      - name: Assert Docker is reachable via TCP (if action succeeded)
+      - name: Assert Docker is functional via DOCKER_HOST (if action succeeded)
         env:
-          TCP: ${{ steps.action.outputs.tcp }}
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           if [ "$OUTCOME" = "success" ]; then
-            echo "Testing Docker TCP connectivity at $TCP"
-            docker -H "$TCP" version
-            echo "PASS: docker is reachable via TCP"
+            docker version
+            echo "PASS: docker is functional via DOCKER_HOST"
           else
-            echo "SKIP: action did not succeed, skipping TCP connectivity check"
+            echo "SKIP: action did not succeed, skipping docker version check"
           fi

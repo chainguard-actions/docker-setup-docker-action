@@ -1,4 +1,4 @@
-name: Test Docker setup with runtime-basedir input
+name: Test runtime-basedir input
 on:
   workflow_dispatch:
 jobs:
@@ -7,14 +7,14 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Create runtime base directory
-        run: mkdir -p /tmp/docker-runtime-basedir
-      - id: setup-docker
+        run: mkdir -p /tmp/docker-runtime-base
+      - id: action
         uses: .
         with:
-          runtime-basedir: /tmp/docker-runtime-basedir
-      - name: Assert Docker socket output is set
+          runtime-basedir: /tmp/docker-runtime-base
+      - name: Assert sock output is set
         env:
-          SOCK: ${{ steps.setup-docker.outputs.sock }}
+          SOCK: ${{ steps.action.outputs.sock }}
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
@@ -22,7 +22,3 @@ jobs:
             exit 1
           fi
           echo "PASS"
-      - name: Assert Docker is functional with custom runtime basedir
-        run: |
-          docker version
-          echo "PASS: docker version succeeded with custom runtime-basedir"

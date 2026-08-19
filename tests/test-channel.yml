@@ -1,4 +1,4 @@
-name: Test Docker setup with channel input
+name: Test channel input
 on:
   workflow_dispatch:
 jobs:
@@ -6,14 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: setup-docker
+      - id: action
         uses: .
         with:
-          version: latest
           channel: stable
-      - name: Assert Docker socket output is set
+      - name: Assert sock output is set
         env:
-          SOCK: ${{ steps.setup-docker.outputs.sock }}
+          SOCK: ${{ steps.action.outputs.sock }}
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
@@ -21,7 +20,3 @@ jobs:
             exit 1
           fi
           echo "PASS"
-      - name: Assert Docker is functional
-        run: |
-          docker version
-          echo "PASS: docker version succeeded"
