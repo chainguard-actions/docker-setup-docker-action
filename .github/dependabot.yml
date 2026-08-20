@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    ignore:
+      # ignore this dependency
+      # it seems a bug with dependabot as pining to commit sha should not
+      # trigger a new version similar to https://github.com/docker/buildx/pull/2222#issuecomment-1919092153
+      - dependency-name: "docker/actions-toolkit"
+    labels:
+      - "dependencies"
+      - "bot"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-type: "production"
+    labels:
+      - "dependencies"
+      - "bot"

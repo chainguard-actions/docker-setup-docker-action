@@ -6,20 +6,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Create runtime base directory
-        run: mkdir -p /tmp/docker-runtime
       - id: action
         uses: .
         with:
-          version: latest
-          runtime-basedir: /tmp/docker-runtime
+          runtime-basedir: /tmp/docker-runtime-test
       - name: Assert sock output is set
         env:
           SOCK: ${{ steps.action.outputs.sock }}
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
-            echo "FAIL: expected sock output to be non-empty"
+            echo "FAIL: expected sock output to be set"
             exit 1
           fi
-          echo "PASS"
+          echo "PASS: sock output is set to '$SOCK'"

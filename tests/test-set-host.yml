@@ -1,4 +1,4 @@
-name: Test basic usage
+name: Test set-host option
 on:
   workflow_dispatch:
 jobs:
@@ -9,7 +9,7 @@ jobs:
       - id: action
         uses: .
         with:
-          version: latest
+          set-host: 'true'
         continue-on-error: true
       - name: Assert action ran (sock output set, or failed gracefully in act environment)
         env:

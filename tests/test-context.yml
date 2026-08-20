@@ -9,15 +9,24 @@ jobs:
       - id: action
         uses: .
         with:
-          version: latest
-          context: my-docker-context
+          context: my-test-context
       - name: Assert sock output is set
         env:
           SOCK: ${{ steps.action.outputs.sock }}
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
-            echo "FAIL: expected sock output to be non-empty"
+            echo "FAIL: expected sock output to be set"
             exit 1
           fi
-          echo "PASS"
+          echo "PASS: sock output is set to '$SOCK'"
+      - name: Assert Docker context exists
+        run: |
+          echo "Listing Docker contexts:"
+          docker context ls
+          if docker context ls --format '{{.Name}}' | grep -q 'my-test-context'; then
+            echo "PASS: Docker context 'my-test-context' exists"
+          else
+            echo "FAIL: Docker context 'my-test-context' not found"
+            exit 1
+          fi

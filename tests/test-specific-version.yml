@@ -1,4 +1,4 @@
-name: Test basic usage
+name: Test specific Docker version
 on:
   workflow_dispatch:
 jobs:
@@ -9,7 +9,8 @@ jobs:
       - id: action
         uses: .
         with:
-          version: latest
+          version: v26.1.4
+          channel: stable
         continue-on-error: true
       - name: Assert action ran (sock output set, or failed gracefully in act environment)
         env:
