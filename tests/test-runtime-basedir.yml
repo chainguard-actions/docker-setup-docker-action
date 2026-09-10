@@ -16,7 +16,12 @@ jobs:
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
-            echo "FAIL: expected sock output to be set"
+            echo "FAIL: expected sock output to be non-empty"
             exit 1
           fi
-          echo "PASS: sock output is set to '$SOCK'"
+          echo "PASS"
+      - name: Assert Docker is functional
+        run: |
+          echo "Verifying Docker is operational with custom runtime-basedir"
+          docker version
+          echo "PASS"

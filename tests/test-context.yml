@@ -16,17 +16,16 @@ jobs:
         run: |
           echo "sock: $SOCK"
           if [ -z "$SOCK" ]; then
-            echo "FAIL: expected sock output to be set"
+            echo "FAIL: expected sock output to be non-empty"
             exit 1
           fi
-          echo "PASS: sock output is set to '$SOCK'"
+          echo "PASS"
       - name: Assert Docker context exists
         run: |
           echo "Listing Docker contexts:"
           docker context ls
-          if docker context ls --format '{{.Name}}' | grep -q 'my-test-context'; then
-            echo "PASS: Docker context 'my-test-context' exists"
-          else
-            echo "FAIL: Docker context 'my-test-context' not found"
+          if ! docker context ls --format '{{.Name}}' | grep -q 'my-test-context'; then
+            echo "FAIL: expected Docker context 'my-test-context' to exist"
             exit 1
           fi
+          echo "PASS"
