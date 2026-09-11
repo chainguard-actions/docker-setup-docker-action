@@ -20,3 +20,10 @@ jobs:
             exit 1
           fi
           echo "PASS"
+      - name: Assert Docker context exists
+        run: |
+          if ! docker context ls --format '{{.Name}}' | grep -q 'my-test-context'; then
+            echo "FAIL: expected Docker context 'my-test-context' to exist"
+            exit 1
+          fi
+          echo "PASS: Docker context 'my-test-context' found"
