@@ -12,15 +12,15 @@ jobs:
           runtime-basedir: /tmp/docker-runtime
       - name: Assert sock output is set
         env:
-          ACTUAL: ${{ steps.action.outputs.sock }}
+          SOCK: ${{ steps.action.outputs.sock }}
         run: |
-          echo "actual sock: $ACTUAL"
-          if [ -z "$ACTUAL" ]; then
-            echo "FAIL: expected sock output to be non-empty"
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: expected sock output to be set"
             exit 1
           fi
-          echo "PASS"
+          echo "PASS: sock output is set to $SOCK"
       - name: Assert Docker is available
         run: |
           docker version
-          echo "PASS: docker is available"
+          echo "PASS: Docker is available"
