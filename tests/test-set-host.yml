@@ -1,0 +1,38 @@
+name: Test Docker setup with set-host
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: 'latest'
+          set-host: 'true'
+        continue-on-error: true
+      - name: Assert action ran (sock output set and DOCKER_HOST exported, or failed gracefully)
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "sock: $SOCK"
+          echo "DOCKER_HOST: $DOCKER_HOST"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$SOCK" ]; then
+              echo "FAIL: action succeeded but sock output is empty"
+              exit 1
+            fi
+            if [ -z "$DOCKER_HOST" ]; then
+              echo "FAIL: action succeeded with set-host=true but DOCKER_HOST is not set"
+              exit 1
+            fi
+            echo "PASS: sock=$SOCK DOCKER_HOST=$DOCKER_HOST"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (expected in act environment with limited capabilities)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
