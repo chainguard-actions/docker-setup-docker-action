@@ -1,0 +1,50 @@
+name: Test channel and runtime-basedir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare runtime base directory
+        run: mkdir -p /tmp/dkrt
+      - id: action
+        uses: .
+        with:
+          version: v27.3.1
+          channel: stable
+          runtime-basedir: /tmp/dkrt
+          # The act container is not privileged: iptables and overlay mounts
+          # are not permitted, so turn off networking features and use vfs.
+          daemon-config: |
+            {
+              "iptables": false,
+              "ip6tables": false,
+              "ip-forward": false,
+              "ip-masq": false,
+              "bridge": "none",
+              "storage-driver": "vfs"
+            }
+      - name: Assert sock output is under runtime-basedir
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: sock output is empty"
+            exit 1
+          fi
+          case "$SOCK" in
+            unix:///tmp/dkrt*) echo "PASS: sock is under runtime-basedir" ;;
+            *) echo "FAIL: expected sock under unix:///tmp/dkrt"; exit 1 ;;
+          esac
+      - name: Assert tcp output empty when tcp-port unset
+        env:
+          TCP: ${{ steps.action.outputs.tcp }}
+        run: |
+          echo "tcp: $TCP"
+          if [ -n "$TCP" ]; then
+            echo "FAIL: tcp output should be empty without tcp-port"
+            exit 1
+          fi
+          echo "PASS"

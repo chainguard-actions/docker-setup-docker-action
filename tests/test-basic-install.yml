@@ -1,0 +1,55 @@
+name: Test basic install
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          version: v27.3.1
+          set-host: 'true'
+          tcp-port: '2378'
+          # The act container is not privileged: iptables and overlay mounts
+          # are not permitted, so turn off networking features and use vfs.
+          daemon-config: |
+            {
+              "iptables": false,
+              "ip6tables": false,
+              "ip-forward": false,
+              "ip-masq": false,
+              "bridge": "none",
+              "storage-driver": "vfs"
+            }
+      - name: Assert sock output
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "sock: $SOCK"
+          if [ -z "$SOCK" ]; then
+            echo "FAIL: sock output is empty"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert tcp output
+        env:
+          TCP: ${{ steps.action.outputs.tcp }}
+        run: |
+          echo "tcp: $TCP"
+          if [ "$TCP" != "tcp://127.0.0.1:2378" ]; then
+            echo "FAIL: expected tcp://127.0.0.1:2378"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert DOCKER_HOST exported
+        env:
+          SOCK: ${{ steps.action.outputs.sock }}
+        run: |
+          echo "DOCKER_HOST: $DOCKER_HOST"
+          if [ "$DOCKER_HOST" != "$SOCK" ]; then
+            echo "FAIL: DOCKER_HOST should equal sock output"
+            exit 1
+          fi
+          echo "PASS"
