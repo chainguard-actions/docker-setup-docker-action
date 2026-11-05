@@ -14,6 +14,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.4.0 | [`v5.4.0`](https://github.com/chainguard-actions/docker-setup-docker-action/tree/v5.4.0) | [`77e84db`](https://github.com/docker/setup-docker-action/commit/77e84dbf09b47d1e29270283c22f16145aa85ca1) | [`HARDENING.md`](https://github.com/chainguard-actions/docker-setup-docker-action/blob/v5.4.0/HARDENING.md) |
 | v5.5.0 | [`v5.5.0`](https://github.com/chainguard-actions/docker-setup-docker-action/tree/v5.5.0) | [`2bf61fb`](https://github.com/docker/setup-docker-action/commit/2bf61fb9464cc67f0cbdeabed6aa0380accd1c70) | [`HARDENING.md`](https://github.com/chainguard-actions/docker-setup-docker-action/blob/v5.5.0/HARDENING.md) |
 | v5.6.0 | [`v5.6.0`](https://github.com/chainguard-actions/docker-setup-docker-action/tree/v5.6.0) | [`7ec28a0`](https://github.com/docker/setup-docker-action/commit/7ec28a010822b4626af4874f9448a4b05ac6f3e5) | [`HARDENING.md`](https://github.com/chainguard-actions/docker-setup-docker-action/blob/v5.6.0/HARDENING.md) |
+| v5.7.0 | [`v5.7.0`](https://github.com/chainguard-actions/docker-setup-docker-action/tree/v5.7.0) | [`3f1ab1a`](https://github.com/docker/setup-docker-action/commit/3f1ab1ab0e29231562e4db4ca600c1a49653bac6) | [`HARDENING.md`](https://github.com/chainguard-actions/docker-setup-docker-action/blob/v5.7.0/HARDENING.md) |
 
 ## Privacy
 
